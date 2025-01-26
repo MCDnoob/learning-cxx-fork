@@ -1,5 +1,6 @@
 ﻿#include "../exercise.h"
 #include <cstring>
+
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
 template<class T>
@@ -10,6 +11,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for(int i = 0;i<4;i++){
+            shape[i] = shape_[i];
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +33,47 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+
+        //预先储存每个阶是否需要广播
+        bool boardcast[4];
+        for(auto i = 0u; i<4; ++i){
+            //如果形状不一样就要广播
+            //这个判断就是如果shape[i] != others.shape[i]为true就会执行，副作用是boardcast[i] = true;
+            boardcast[i] = shape[i] != others.shape[i];
+            if(boardcast[i]){
+                //如果不相等，others.shape[i]必须是1
+                ASSERT(others.shape[i]==1, "!");
+            }
+        }
+
+        //两个指针
+        auto dst = this->data;      //要加到的元素地址
+        auto src = others.data;    //要加上的元素地址
+
+        //4个锚点，广播算法的关键点
+        T *marks[4]{src};
+        for(auto i0 = 0u; i0<shape[0]; ++i0){
+            if(boardcast[0]) src = marks[0];//如果这个是需要广播的，就让src回到原来的锚定的位置
+
+            marks[1] = src;                 //记录下一个锚定的位置
+
+            for(auto i1 = 0u; i1<shape[1]; ++i1){
+                if(boardcast[1]) src = marks[1];
+
+                marks[2] = src;
+
+                for(auto i2 = 0u; i2<shape[2]; ++i2){
+                    if(boardcast[2]) src = marks[2];
+
+                    marks[3] = src;
+
+                    for(auto i3 = 0u; i3<shape[3]; ++i3){
+                        if(boardcast[3]) src = marks[3];    //如果这个位置需要广播，不断的将src置回锚定的位置，从而src位置不变。
+                        *dst++ += *src++;                   
+                    }
+                }
+            }     
+        }
         return *this;
     }
 };

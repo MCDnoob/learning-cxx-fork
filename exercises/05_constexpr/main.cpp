@@ -18,7 +18,10 @@ int main(int argc, char **argv) {
 
     // TODO: 观察错误信息，修改一处，使代码编译运行
     // PS: 编译运行，但是不一定能算出结果……
-    constexpr auto ANS_N = 90;
+    constexpr auto ANS_N = 25;
+    /*思路：出现的错误是： ‘constexpr’ evaluation operation count exceeds limit of 33554432 (use ‘-fconstexpr-ops-limit=’ to increase the limit)
+    对constexpr，编译器限制了编译表达式中的运算次数，从而防止编译时间过长。报错则就是在编译中的错误，编译的运算次数超过了限制。
+    所以解决方法就是将变量ANS声明中的修饰符constexpr去掉。*/
     constexpr auto ANS = fibonacci(ANS_N);
     std::cout << "fibonacci(" << ANS_N << ") = " << ANS << std::endl;
 
